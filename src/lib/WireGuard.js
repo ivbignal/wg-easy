@@ -246,18 +246,17 @@ Endpoint = ${WG_HOST}:${WG_PORT}`;
 
     // Calculate next IP
     let address;
-    const clientIps = Object.values(config.clients);
 
-    for (let j = 0; j < 50; j++) {
+    for (let i = 0; i < 50; i++) {
       for (let i = 2; i < 255; i++) {
-        const possibleNextIp = WG_DEFAULT_ADDRESS.replace("x", i).replace(
-          "y",
-          j
-        );
-        const isIpExisted = clientIps.includes(possibleNextIp);
+        const nextIP = WG_DEFAULT_ADDRESS.replace("x", i).replace("y", j);
 
-        if (!isIpExisted) {
-          address = possibleNextIp;
+        const client = Object.values(config.clients).find((client) => {
+          return client.address === nextIP;
+        });
+
+        if (!client) {
+          address = nextIP;
           break;
         }
       }
