@@ -260,6 +260,9 @@ Endpoint = ${WG_HOST}:${WG_PORT}`;
           break;
         }
       }
+      if (address) {
+        break;
+      }
     }
 
     if (!address) {
