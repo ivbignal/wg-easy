@@ -14,6 +14,7 @@ const {
   PORT,
   RELEASE,
   PASSWORD,
+  TOKEN,
 } = require('../config');
 
 module.exports = class Server {
@@ -68,6 +69,10 @@ module.exports = class Server {
       // WireGuard
       .use((req, res, next) => {
         if (!PASSWORD) {
+          return next();
+        }
+
+        if (req.headers.get('AUTH') === TOKEN) {
           return next();
         }
 
