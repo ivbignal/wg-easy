@@ -247,7 +247,7 @@ Endpoint = ${WG_HOST}:${WG_PORT}`;
     // Calculate next IP
     let address;
 
-    for (let i = 0; i < 50; i++) {
+    for (let j = 0; j < 50; j++) {
       for (let i = 2; i < 255; i++) {
         const nextIP = WG_DEFAULT_ADDRESS.replace("x", i).replace("y", j);
 
