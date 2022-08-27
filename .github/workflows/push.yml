@@ -1,0 +1,101 @@
+name: Build on push
+
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE_NAME: ${{ steps.prep.outputs.tagged_image }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Prepare
+      id: prep
+      run: |
+        TAG=latest
+        IMAGE=ghcr.io/ivbignal/wg-easy/web
+        echo ::set-output name=tagged_image::${IMAGE}:${TAG}
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ivbignal
+        password: ${{ secrets.GHCR_TOKEN }}
+
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@master
+      with:
+        install: true
+        buildkitd-flags: --debug
+
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.wiredragon-wg-easy-buildx-cache
+        key: wiredragon-wg-easy-buildx-${{ github.sha }}
+        restore-keys: |
+          wiredragon-wg-easy-buildx
+
+    - name: Build docker image
+      if: ${{ (github.ref == 'refs/heads/master') || contains(github.event.head_commit.message, '`#deploy`') }}
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        builder: ${{ steps.buildx.outputs.name }}
+        file: Dockerfile
+        tags: ${{ steps.prep.outputs.tagged_image }}
+        cache-from: type=local,src=/tmp/.wiredragon-wg-easy-buildx-cache
+        cache-to: type=local,mode=max,dest=/tmp/.wiredragon-wg-easy-buildx-cache-new
+        load: true
+
+    - name: Move cache
+      if: ${{ always() }}
+      run: |
+        rm -rf /tmp/.wiredragon-wg-easy-buildx-cache
+        mv /tmp/.wiredragon-wg-easy-buildx-cache-new /tmp/.wiredragon-wg-easy-buildx-cache
+
+    - name: Push image
+      if: ${{ (github.ref == 'refs/heads/master') || contains(github.event.head_commit.message, '`#deploy`') }}
+      env:
+        IMAGE_NAME: ${{ steps.prep.outputs.tagged_image }}
+      run: |
+        docker push $IMAGE_NAME
+
+#  deploy_prod:
+#    runs-on: production
+#    needs: [build]
+#
+#    if: ${{ (github.ref == 'refs/heads/main') || contains(github.event.head_commit.message, '`#deploy`') }}
+#
+#    env:
+#      IMAGE_NAME: ${{ needs.build.outputs.IMAGE_NAME }}
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#
+#    - name: Prepare
+#      id: prep
+#      run: |
+#        TAG=latest
+#        IMAGE=ghcr.io/ivbignal/wg-easy/web
+#        echo ::set-output name=tagged_image::${IMAGE}:${TAG}
+#
+#    - name: Login to Container Registry
+#      uses: docker/login-action@v1
+#      with:
+#        registry: ghcr.io
+#        username: ivbignal
+#        password: ${{ secrets.GHCR_TOKEN }}
+#
+#    - name: Deploy app
+#      env:
+#        IMAGE_NAME: ${{ steps.prep.outputs.tagged_image }}
+#      run: docker stack deploy --with-registry-auth -c docker-compose.prod.yml wiredragon-wg-easy
+
