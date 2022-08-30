@@ -72,7 +72,7 @@ module.exports = class Server {
           return next();
         }
 
-        debug(`Headers: ${req.headers}`);
+        debug(`Headers: ${JSON.stringify(req.headers)}`);
         if (req.headers?.['Auth'] === TOKEN) {
           return next();
         }
