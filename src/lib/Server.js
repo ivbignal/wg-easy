@@ -72,7 +72,7 @@ module.exports = class Server {
           return next();
         }
 
-        if (req.headers?.['AUTH'] === TOKEN) {
+        if (req.headers?.['Auth'] === TOKEN) {
           return next();
         }
 
