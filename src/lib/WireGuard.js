@@ -46,7 +46,7 @@ module.exports = class WireGuard {
           });
 
           let address = WG_DEFAULT_ADDRESS.replace("x", "1");
-          address = WG_DEFAULT_ADDRESS.replace("y", "0");
+          address = address.replace("y", "0");
 
           config = {
             server: {
